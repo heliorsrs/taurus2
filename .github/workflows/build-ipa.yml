@@ -38,8 +38,9 @@ jobs:
 
       - name: Install tools
         run: |
-          brew install make dpkg ldid
-          python3 -m pip install --break-system-packages git+https://github.com/asdfzxcvbn/pyzule-rw.git
+          brew install make dpkg ldid uv
+          uv tool install "cyan @ git+https://github.com/asdfzxcvbn/pyzule-rw.git"
+          echo "$HOME/.local/bin" >> $GITHUB_PATH
 
       - name: Download IPA
         run: |
@@ -50,11 +51,7 @@ jobs:
       - name: Build Tweak and Inject IPA
         run: |
           mkdir -p out
-          if [ -d "layout" ] || [ -f "control" ]; then
-            pyzule -i ipa/spotify.ipa -f . -o out/Taurus.ipa
-          else
-            pyzule -i ipa/spotify.ipa -o out/Taurus.ipa
-          fi
+          pyzule -i ipa/spotify.ipa -o out/Taurus.ipa
 
       - uses: actions/upload-artifact@v5
         if: github.event.inputs.upload_method != 'filebin'
