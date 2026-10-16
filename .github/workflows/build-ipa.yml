@@ -48,10 +48,10 @@ jobs:
           curl -fsSL "${{ github.event.inputs.ipa_url }}" -o ipa/spotify.ipa
           case "$(file --mime-type -b ipa/spotify.ipa)" in application/zip|application/x-ios-app) ;; *) echo "::error::Not an IPA"; exit 1 ;; esac
 
-      - name: Build Tweak and Inject
+      - name: Build Tweak and Inject (Strip Watch App)
         run: |
           mkdir -p out
-          make release || cyan -i ipa/spotify.ipa -o out/Taurus.ipa
+          cyan -i ipa/spotify.ipa -u -o out/Taurus.ipa
 
       - uses: actions/upload-artifact@v5
         if: github.event.inputs.upload_method != 'filebin'
