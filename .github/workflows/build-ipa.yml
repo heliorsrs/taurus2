@@ -38,7 +38,7 @@ jobs:
 
       - name: Install tools
         run: |
-          brew install make dpkg ldid uv zsign
+          brew install make dpkg ldid uv zsign zip unzip
           uv tool install "cyan @ git+https://github.com/asdfzxcvbn/pyzule-rw"
           echo "$HOME/.local/bin" >> $GITHUB_PATH
 
@@ -48,10 +48,25 @@ jobs:
           curl -fsSL "${{ github.event.inputs.ipa_url }}" -o ipa/spotify.ipa
           case "$(file --mime-type -b ipa/spotify.ipa)" in application/zip|application/x-ios-app) ;; *) echo "::error::Not an IPA"; exit 1 ;; esac
 
-      - name: Build Tweak and Inject (Strip Watch App)
+      - name: Build Tweak and Inject IPA
         run: |
           mkdir -p out
-          cyan -i ipa/spotify.ipa -u -o out/Taurus.ipa
+          cyan -i ipa/spotify.ipa -o out/Taurus_temp.ipa
+
+      - name: Strip Watch App and PlugIns
+        run: |
+          mkdir -p extracted
+          unzip -q out/Taurus_temp.ipa -d extracted/
+          
+          # Remove Watch companion app and extra extensions
+          rm -rf extracted/Payload/*.app/Watch
+          rm -rf extracted/Payload/*.app/PlugIns
+          
+          # Repackage cleaned IPA
+          cd extracted
+          zip -qr ../out/Taurus.ipa Payload/
+          cd ..
+          rm -rf extracted out/Taurus_temp.ipa
 
       - uses: actions/upload-artifact@v5
         if: github.event.inputs.upload_method != 'filebin'
