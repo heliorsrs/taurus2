@@ -48,17 +48,27 @@ jobs:
           curl -fsSL "${{ github.event.inputs.ipa_url }}" -o ipa/spotify.ipa
           case "$(file --mime-type -b ipa/spotify.ipa)" in application/zip|application/x-ios-app) ;; *) echo "::error::Not an IPA"; exit 1 ;; esac
 
-      - name: Build Tweak and Inject IPA
+      - name: Compile Taurus Tweak
+        run: |
+          make package
+
+      - name: Inject Tweak into IPA
         run: |
           mkdir -p out
-          cyan -i ipa/spotify.ipa -o out/Taurus_temp.ipa
+          DEB_FILE=$(ls packages/*.deb 2>/dev/null | head -n 1)
+          if [ -n "$DEB_FILE" ]; then
+            cyan -i ipa/spotify.ipa -f "$DEB_FILE" -o out/Taurus_temp.ipa
+          else
+            echo "::error::No compiled .deb package found!"
+            exit 1
+          fi
 
       - name: Strip Watch App and PlugIns
         run: |
           mkdir -p extracted
           unzip -q out/Taurus_temp.ipa -d extracted/
           
-          # Remove Watch companion app and extra extensions
+          # Remove Watch companion app and extra extensions to prevent bundle ID mismatch
           rm -rf extracted/Payload/*.app/Watch
           rm -rf extracted/Payload/*.app/PlugIns
           
