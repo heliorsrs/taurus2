@@ -50,10 +50,8 @@ jobs:
       - name: Build Tweak and Inject IPA
         run: |
           mkdir -p out
-          make clean package
-          DEB_FILE=$(ls packages/*.deb 2>/dev/null | head -n 1)
-          if [ -n "$DEB_FILE" ]; then
-            pyzule -i ipa/spotify.ipa -f "$DEB_FILE" -o out/Taurus.ipa
+          if [ -d "layout" ] || [ -f "control" ]; then
+            pyzule -i ipa/spotify.ipa -f . -o out/Taurus.ipa
           else
             pyzule -i ipa/spotify.ipa -o out/Taurus.ipa
           fi
